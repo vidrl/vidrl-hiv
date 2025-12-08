@@ -1,0 +1,5 @@
+# exclude some files for git 
+archieve
+build
+vidrl_hiv.egg-info
+.DS_Store
