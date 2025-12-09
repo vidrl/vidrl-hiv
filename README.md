@@ -8,7 +8,7 @@ HIV analysis pipeline using Micall
 conda / mamba 
 
 > [!Tip]
-> To install miniconda `wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh`
+> To install miniconda `wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh | bash Miniconda3-latest-Linux-x86_64.sh`
 
 ## install
 
@@ -43,7 +43,7 @@ samplesheet.csv
 
 | #name | r1 | r2 | reference |
 | :---: | :---: | :---:| :---:|
-| sample1 | sample1_R1.fastq.gz | sample1_R2.fastq.gz | hxb2 |
+| sample1 | input/sample1_R1.fastq.gz | input/sample1_R2.fastq.gz | hxb2 |
 | ... | ... | ... | ... |
 
 There are example samplesheets inside the example folder
