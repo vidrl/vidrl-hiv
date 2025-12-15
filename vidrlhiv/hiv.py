@@ -82,6 +82,23 @@ def run_R_command(Rscript, bed, pdf, depthf=""):
     print(command_line)
     bash_command(command_line)
 
+def reformat_dirtysamplesheet(path_to_file):
+    new_rows = []
+    with open(path_to_file, 'r') as mydirty:
+        csvreader = csv.reader(mydirty)
+        title = next(csvreader)
+        new_rows.append(title)
+        for line in csvreader:
+            cwd = os.getcwd()
+            r1 = str(os.path.abspath(line[1]))
+            r2 = str(os.path.abspath(line[1]))
+            new_rows.append([line[0], r1, r2, line[3]])
+    with open(os.path.join(os.getcwd(), "dirtyinput.csv"), 'w', newline="") as myout:
+        csvwriter = csv.writer(myout)
+        for row in new_rows:
+            csvwriter.writerow(row)
+    return os.path.join(os.getcwd(), "dirtyinput.csv")
+
 def main():
     parser=argparse.ArgumentParser(description="Runing VIDRL HIV pipeline")
     parser.add_argument("samplesheet", help="input a samplesheet to run VIDRL HIV analysis")
@@ -106,7 +123,7 @@ def main():
     else:
         samplesheet = abs_path
         #dirtysamplesheet = os.path.abspath(samplesheetaddref(samplesheet, "./dirtysamplesheet.csv"))
-        dirtysamplesheet = abs_path
+        dirtysamplesheet = reformat_dirtysamplesheet(abs_path)
         
     
     #find snakefile and configfile in resources

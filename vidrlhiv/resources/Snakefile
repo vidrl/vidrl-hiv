@@ -134,6 +134,13 @@ rule rasusa:
             cp {input.R1} {output.R1}
             cp {input.R2} {output.R2}
         fi
+        mkdir -p results/non-empty
+        MIN_SIZE=1
+        R1_size_1=$(du -k {output.R1} | cut -f1)
+        if (( R1_size_1 > MIN_SIZE )); then
+            cp {output.R1} results/non-empty/
+            cp {output.R2} results/non-empty/
+        fi
         """
 
 rule Micall:
@@ -156,6 +163,6 @@ rule Micall:
         --project HIVB \
         --skip trim.censor  \
         --keep_scratch \
-        results/rasusa ../micall \
+        results/non-empty ../micall \
         --max_active {threads}
         """
