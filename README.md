@@ -11,7 +11,7 @@ git clone https://github.com/abcdtree/vidrl-hiv.git
 cd vidrl-hiv
 conda env create -f conda.yaml
 conda activate vidrl-hiv
-pip install dist/vidrl_hiv-0.0.1.tar.gz
+pip install dist/vidrl_hiv-0.0.2.tar.gz
 ```
 
 ## Usage
