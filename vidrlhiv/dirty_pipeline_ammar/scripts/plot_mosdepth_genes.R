@@ -48,13 +48,23 @@ depth = depth %>%
                              depth > 500 & depth < 1000 ~ "excellent (> 500 & < 1000)",
                              depth > 1000 ~ "abundant (>1000)",
                              TRUE ~ NA_character_))
-
+combine_id <- function(x){
+    if (grepl("_", x)){
+        y <- sub("^([^_]*)_(.*)$", "\\2_\\1", x)
+    return(y)
+    } else {
+        return(x)
+    }
+}
 
 ##re-write the plot section
 plot_list <- list()
 count <- 1
 label_vector <- c()
-for (s in unique(depth$sample)){
+sample_list <- unique(depth$sample)
+sort_idx <- order(combine_id(sample_list))
+sorted_sample_list <- sample_list[sort_idx]
+for (s in sorted_sample_list){
     sub_df <- depth %>% filter(sample == s)
     p <- ggplot(sub_df, aes(x=gene, y=depth)) +
         geom_col(aes(fill=grade)) +
