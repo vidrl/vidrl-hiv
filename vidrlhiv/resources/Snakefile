@@ -129,7 +129,7 @@ rule rasusa:
         R2_size=$(du -m {input.R2} | cut -f1)
 
         if [[ "$R1_size" -gt "$MAX_SIZE" || "$R2_size" -gt "$MAX_SIZE" ]]; then
-            rasusa reads -n 2m {input.R1} {input.R2} -o {output.R1} -o {output.R2}
+            rasusa reads -n 300k {input.R1} {input.R2} -o {output.R1} -o {output.R2}
         else
             cp {input.R1} {output.R1}
             cp {input.R2} {output.R2}

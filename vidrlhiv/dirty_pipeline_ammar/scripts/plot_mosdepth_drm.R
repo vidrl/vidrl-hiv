@@ -77,7 +77,7 @@ for (s in sorted_sample_list){
         #facet_grid(runid~sampleid) + 
         #facet_grid(sample~.) +
         theme_classic() +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        theme(axis.text.x = element_text(size=8,angle = 90, vjust = 0.5, hjust=1),
         plot.title = element_text(size = 15, face = "bold"))
     plot_list[[count]] <- p
     label_vector <- c(label_vector, s)
