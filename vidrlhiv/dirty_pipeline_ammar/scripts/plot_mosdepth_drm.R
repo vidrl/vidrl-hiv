@@ -61,6 +61,14 @@ combine_id <- function(x){
     }
 }
 
+color_vector = c(
+    "bad(depth < 50)" = "grey",
+    "fine ( > 50 & < 100)" = "brown",
+    "good (> 100 & < 500)" = "blue",
+    "excellent (> 500 & < 1000)" = "green",
+    "abundant (>1000)" = "coral"
+)
+
 ##re-write the plot section
 plot_list <- list()
 count <- 1
@@ -77,7 +85,8 @@ for (s in sorted_sample_list){
         #facet_grid(runid~sampleid) + 
         #facet_grid(sample~.) +
         theme_classic() +
-        theme(axis.text.x = element_text(size=8,angle = 90, vjust = 0.5, hjust=1),
+        scale_fill_manual(values=color_vector) +
+        theme(axis.text.x = element_text(size=5,angle = 90, vjust = 0.5, hjust=1),
         plot.title = element_text(size = 15, face = "bold"))
     plot_list[[count]] <- p
     label_vector <- c(label_vector, s)

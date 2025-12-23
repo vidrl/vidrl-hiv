@@ -7,6 +7,44 @@ import re
 import itertools
 import csv
 
+def check_fastq(filename):
+    fastq_name = filename.split("/")[-1]
+    count_d = fastq_name.count("_")
+    if count_d > 2:
+        print(f"please check your fastq filename : {fastq_name}, there are more than 2 _ in the filename which will mislead Micall")
+        return False
+    return True
+
+def input_check(samplesheet):
+    ## check whether this is duplicate sample ID
+    ## check whether the fastq files were named legally
+    print("... Checking the input samplesheet ...")
+    with open(samplesheet, 'r') as myinput:
+        csvreader = csv.reader(samplesheet)
+        header = next(csvreader)
+        if len(header) != 4:
+            print(f"Error, the column number is {len(header)} instead of 4, please check your input format")
+            return False
+        else:
+            if header[0][0] != "#":
+                print(f"Error, # is requested ahead of first column name, please edit your samplesheet")
+                return False
+            else:
+                names = []
+                file_check = []
+                for line in csvreader:
+                    names.append(line[0])
+                    file_check.append(check_fastq(line[1]))
+                    file_check.append(check_fastq(line[2]))
+                if len(names) != len(set(names)):
+                    print("Error, there are dup sample ids in the samplesheet")
+                    return False
+                if False in file_check:
+                    print("Error, please check the fastq names")
+                    return False
+                print("... Samplesheet Checking is Done ...")
+                return True
+
 
 def bash_command(cmd):
 	p = subprocess.Popen(cmd, shell=True)
@@ -105,6 +143,8 @@ def main():
     #parser.add_argument("--dirtyinput", help="input samplesheet for dirty pipeline to run")
     parser.add_argument("--cpu", default=10, help="Number of CPU")
     parser.add_argument("--maxjob", default=10, help="Max number of job to run together")
+    parser.add_argument("--micallonly", action='store_true', help="Run Micall only")
+    parser.add_argument("--dirtyonly", action="store_true", help="Run dirtypipeline only")
     args = parser.parse_args()
     abs_path = ""
     try:
@@ -124,33 +164,41 @@ def main():
         samplesheet = abs_path
         #dirtysamplesheet = os.path.abspath(samplesheetaddref(samplesheet, "./dirtysamplesheet.csv"))
         dirtysamplesheet = reformat_dirtysamplesheet(abs_path)
-        
     
+    #add samplesheet check to avoid some miss input situation
+    input_check(samplesheet)
+
     #find snakefile and configfile in resources
     snakefile = ""
     configfile = ""
     package_root = files("vidrlhiv")
     snakefile = package_root/'resources'/'Snakefile'
     configfile = package_root/'resources'/'config.yaml'
-
-    run_snakemake(snakefile, configfile, samplesheet, inputfolder, args.maxjob, args.cpu)
+    if args.dirtyonly:
+        print("[LOG] skipping micall due to parameter --dirtyonly")
+    else:
+        run_snakemake(snakefile, configfile, samplesheet, inputfolder, args.maxjob, args.cpu)
 
     #running dirty pipeline
     snakefile2 = package_root/'dirty_pipeline_ammar'/'snakefile'
     cwfolder = os.getcwd()
     output_path = os.path.join(cwfolder, "dirtypipeline/results")
-    run_dirty_pipeline(snakefile2, dirtysamplesheet, str(output_path), "./dirtypipeline", args.maxjob, args.cpu)
 
-    #running R script to generate plots
-    gene_plot_script = package_root/'dirty_pipeline_ammar'/'scripts'/'plot_mosdepth_genes.R'
-    drm_plot_script = package_root/'dirty_pipeline_ammar'/'scripts'/'plot_mosdepth_drm.R'
-    gene_bed_path = os.path.join(output_path, "all.gene.bed")
-    drm_bed_path = os.path.join(output_path, "all.drm.bed")
-    gene_pdf = os.path.join(output_path,"gene.pdf")
-    drm_pdf = os.path.join(output_path, "drm.pdf")
-    depth_csv = package_root/'dirty_pipeline_ammar'/'resources'/'depth.totals.csv'
-    run_R_command(gene_plot_script, gene_bed_path, gene_pdf)
-    run_R_command(drm_plot_script, drm_bed_path, drm_pdf, depth_csv)
+    if args.micallonly:
+        print("[LOG] skipping dirtypipeline due to parameter --micallonly")
+    else:
+        run_dirty_pipeline(snakefile2, dirtysamplesheet, str(output_path), "./dirtypipeline", args.maxjob, args.cpu)
+
+        #running R script to generate plots
+        gene_plot_script = package_root/'dirty_pipeline_ammar'/'scripts'/'plot_mosdepth_genes.R'
+        drm_plot_script = package_root/'dirty_pipeline_ammar'/'scripts'/'plot_mosdepth_drm.R'
+        gene_bed_path = os.path.join(output_path, "all.gene.bed")
+        drm_bed_path = os.path.join(output_path, "all.drm.bed")
+        gene_pdf = os.path.join(output_path,"gene.pdf")
+        drm_pdf = os.path.join(output_path, "drm.pdf")
+        depth_csv = package_root/'dirty_pipeline_ammar'/'resources'/'depth.totals.csv'
+        run_R_command(gene_plot_script, gene_bed_path, gene_pdf)
+        run_R_command(drm_plot_script, drm_bed_path, drm_pdf, depth_csv)
 
 
 
