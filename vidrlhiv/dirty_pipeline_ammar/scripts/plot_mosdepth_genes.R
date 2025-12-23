@@ -48,6 +48,11 @@ depth = depth %>%
                              depth > 500 & depth < 1000 ~ "excellent (> 500 & < 1000)",
                              depth > 1000 ~ "abundant (>1000)",
                              TRUE ~ NA_character_))
+                            
+depth$grade <- factor(depth$grade,
+                  levels = c("bad(depth < 50)", "fine ( > 50 & < 100)", 
+                  "good (> 100 & < 500)", "excellent (> 500 & < 1000)",
+                  "abundant (>1000)"))
 combine_id <- function(x){
     if (grepl("_", x)){
         y <- sub("^([^_]*)_(.*)$", "\\2_\\1", x)

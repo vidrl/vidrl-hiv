@@ -20,13 +20,13 @@ def input_check(samplesheet):
     ## check whether the fastq files were named legally
     print("... Checking the input samplesheet ...")
     with open(samplesheet, 'r') as myinput:
-        csvreader = csv.reader(samplesheet)
-        header = next(csvreader)
-        if len(header) != 4:
-            print(f"Error, the column number is {len(header)} instead of 4, please check your input format")
+        csvreader = csv.reader(myinput)
+        cols = list(next(csvreader))
+        if len(cols) != 4:
+            print(f"Error, the column number is {len(cols)} instead of 4, please check your input format")
             return False
         else:
-            if header[0][0] != "#":
+            if cols[0][0] != "#":
                 print(f"Error, # is requested ahead of first column name, please edit your samplesheet")
                 return False
             else:
@@ -166,7 +166,8 @@ def main():
         dirtysamplesheet = reformat_dirtysamplesheet(abs_path)
     
     #add samplesheet check to avoid some miss input situation
-    input_check(samplesheet)
+    if not input_check(samplesheet):
+        sys.exit()
 
     #find snakefile and configfile in resources
     snakefile = ""
