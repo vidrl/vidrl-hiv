@@ -30,6 +30,10 @@ samplesheet.csv
 | sample1 | sample1_R1.fastq.gz | sample1_R2.fastq.gz | hxb2 |
 | ... | ... | ... | ... |
 
+> [!CAUTION]
+> Micall will trim the fastq filename by _, so please make sure there is at most 2 _ in fastq filename
+> example: T_mysample_R1.fastq.gz (Good) and T_my_sample_R1.fastq.gz (Bad)
+
 ### Run Command
 
 ```
