@@ -36,6 +36,7 @@ rule qc:
 	-o {output.r1} -O {output.r2} \
 	--average_qual {params.average_quality} \
 	--length_required {params.min_length} \
+	-U --umi_loc per_read --umi_len 3 --umi_skip 2 \
 	--thread {threads} \
 	--html {params.html} 2> {log}
 	"""
@@ -61,16 +62,56 @@ rule sort_bam:
 	input:
 		bam = rules.mapping.output.bam,
 	output:
+		tmp = temp(OUTDIR / "{sample}" / "{sample}.correct.bam"),
 		bam = OUTDIR / "{sample}" / "{sample}.sorted.bam"
 	threads: 5
+	params:
+		# Customize these as needed
+		rg_id = lambda w: f"{w.sample}",
+		rg_sm = lambda w: f"{w.sample}",
+		rg_lb = "lib1",
+		rg_pl = "ILLUMINA",
 	shell:"""
-	samtools sort {input.bam} -@ {threads} > {output.bam}
+	samtools view -h {input.bam} \
+    | awk 'BEGIN{{FS=OFS="\t"}} /^@/{{print;next}} {{split($1,n,":"); $0=$0"\tRX:Z:"n[length(n)]; print}}'  \
+    | sed s/_/-/g \
+    | samtools view -bS -o {output.tmp}
+
+    samtools addreplacerg \
+                -r "ID:{params.rg_id}" \
+                -r "SM:{params.rg_sm}" \
+                -r "LB:{params.rg_lb}" \
+                -r "PL:{params.rg_pl}" \
+                -@ {threads} \
+                {output.tmp} | samtools sort -@ {threads} -o {output.bam}
 	samtools index {output.bam}
 	"""
 
-rule genome_depth:
+rule picard_dedup:
 	input:
 		bam = rules.sort_bam.output.bam,
+		reference = get_ref_fasta,
+	output:
+		bam = OUTDIR / "{sample}" / "{sample}.dedup.bam",
+		matrics = OUTDIR / "{sample}" / "{sample}.MarkDuplicates.metrics.txt"
+	threads: 5
+	params:
+		args = "--BARCODE_TAG RX --READ_NAME_REGEX '[a-zA-Z0-9]+:[0-9]+:[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+):.*$' --ASSUME_SORTED true --VALIDATION_STRINGENCY LENIENT --REMOVE_DUPLICATES true"
+	shell:
+		"""
+		picard \
+		MarkDuplicates \
+		{params.args} \
+		--INPUT {input.bam} \
+		--OUTPUT {output.bam} \
+		--REFERENCE_SEQUENCE {input.reference} \
+		--METRICS_FILE {output.matrics}
+		"""
+
+rule genome_depth:
+	input:
+		bam = rules.picard_dedup.output.bam,
+		#bam = rules.sort_bam.output.bam,
 	output:
 		depth = OUTDIR / "{sample}" / "bygenome" / "{sample}.depth.txt"
 	params:
